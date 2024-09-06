@@ -25,15 +25,17 @@ jobs:
 
     - name: Log in to Amazon ECR
       uses: aws-actions/amazon-ecr-login@v2
+      with:
+        registry-type: 'private'  # Optional if using private registry
 
     - name: Build, tag, and push Docker image to ECR
       env:
-        ECR_REGISTRY: ${{ secrets.ECR_REPOSITORY }}
+        ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
         ECR_REPOSITORY: my-repo  # Adjust this to your actual repo name
         IMAGE_TAG: latest
 
       run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f docker/Dockerfile .
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
     - name: Verify image on ECR
