@@ -8,7 +8,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -26,18 +25,43 @@ jobs:
     - name: Log in to Amazon ECR
       uses: aws-actions/amazon-ecr-login@v2
 
+    - name: Debug - Print Environment Variables
+      run: |
+        echo "AWS_REGION: ${{ secrets.AWS_REGION }}"
+        echo "AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}"
+        echo "ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}"
+
     - name: Build, tag, and push Docker image to ECR
       env:
         ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
-        ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}  # Use the secret for repository name
-        IMAGE_TAG: latest
-
+        ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+        IMAGE_TAG: ${{ github.sha }}
       run: |
+        echo "ECR_REGISTRY: $ECR_REGISTRY"
+        echo "ECR_REPOSITORY: $ECR_REPOSITORY"
+        echo "IMAGE_TAG: $IMAGE_TAG"
+        
         echo "Building Docker image..."
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -f Dockerfile .
+        docker build -t temp-image:$IMAGE_TAG .
+        
+        echo "Tagging Docker image..."
+        docker tag temp-image:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        
         echo "Pushing Docker image..."
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
     - name: Verify image on ECR
+      env:
+        ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+        IMAGE_TAG: ${{ github.sha }}
       run: |
         aws ecr describe-images --repository-name $ECR_REPOSITORY --image-ids imageTag=$IMAGE_TAG --region ${{ secrets.AWS_REGION }}
+
+    - name: Debug - List Docker images
+      run: docker images
+
+    - name: Debug - Check Docker version
+      run: docker version
+
+    - name: Debug - Check AWS CLI version
+      run: aws --version
