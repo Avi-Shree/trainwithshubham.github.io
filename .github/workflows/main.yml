@@ -3,7 +3,7 @@ name: Build and Push Docker Image to ECR
 on:
   push:
     branches:
-      - main  # Trigger on push to the main branch (you can change this)
+      - main  # Adjust to your desired branch
 
 jobs:
   build:
@@ -19,12 +19,15 @@ jobs:
     - name: Log in to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v2
+      with:
+        region: ${{ secrets.AWS_REGION }}  # Specify the AWS region from GitHub Secrets
 
     - name: Build, tag, and push Docker image to ECR
       env:
         ECR_REGISTRY: ${{ secrets.ECR_REPOSITORY }}
-        ECR_REPOSITORY: my-repo
+        ECR_REPOSITORY: my-repo  # Change to your actual repo name
         IMAGE_TAG: latest
+        AWS_REGION: ${{ secrets.AWS_REGION }}
 
       run: |
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
