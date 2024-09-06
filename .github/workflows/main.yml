@@ -26,11 +26,13 @@ jobs:
     - name: Log in to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v2
+      with:
+        registry-type: 'private'
 
     - name: Build, tag, and push Docker image to ECR
       env:
-        ECR_REGISTRY: public.ecr.aws/r7j1l3c6
-        ECR_REPOSITORY: three-tier
+        ECR_REGISTRY: 851725527665.dkr.ecr.ap-south-1.amazonaws.com
+        ECR_REPOSITORY: new
         IMAGE_TAG: ${{ github.sha }}
       run: |
         echo "Building Docker image..."
